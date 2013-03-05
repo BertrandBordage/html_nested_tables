@@ -15,14 +15,14 @@ class TableDict(OrderedDict):
     """
     TableDict objects are ordered dicts with methods that renders HTML tables.
 
-    Here is an ugly schema to define the terms I’m using.
+    Here is an ugly schema to define the terms I’m using::
 
-             hh1        hh2        hh3        hh4
-          hh11 hh12  hh21 hh22  hh31 hh32  hh41 hh42
+                 hh1        hh2        hh3        hh4
+              hh11 hh12  hh21 hh22  hh31 hh32  hh41 hh42
 
-    vh1   dA   dB    dC   dE    dF   dG    dH   dI
-    vh2   dJ   dK    dL   dM    dN   dO    dP   dQ
-    vh3   dR   dS    dT   dU    dV   dW    dX   dY
+        vh1   dA   dB    dC   dE    dF   dG    dH   dI
+        vh2   dJ   dK    dL   dM    dN   dO    dP   dQ
+        vh3   dR   dS    dT   dU    dV   dW    dX   dY
 
     `hh1`, `hh11`, `hh2` […] are horizontal headers,
     `vh1`, `vh2`, […] are vertical headers,
@@ -237,7 +237,7 @@ class TableDict(OrderedDict):
         outstanding inplace modification possibilities.  That may be much more
         readable, but also much slower.
 
-        :returns: An HTML table.
+        :returns: A HTML table.
         :rtype: unicode
         """
 
@@ -320,7 +320,7 @@ class VerticalTableDictMeta(type):
 
 class HorizontalTableDict(TableDict):
     """
-    Same as TableDict, but with a direction.
+    Same as :class:`TableDict`, but with a direction.
 
     The direction is used to specify whether the headers of the first depth
     of the current object should be put on the horizontal or vertical axis.
@@ -347,7 +347,7 @@ def get_all_structures(datadict):
     :arg datadict: Nested dicts or association lists.  Association lists have
                    the advantage of being ordered.
     :returns: All possible structures.
-    :rtype: frozenset
+    :rtype: list
     """
 
     return list(product((v, h), repeat=len(datadict)))
@@ -364,8 +364,8 @@ def build_table_dict(datadict, structure):
                     must be a sequence of ``h`` and/or ``v``,
                     one per depth level of ``datadict``.
     :type structure: list or tuple
-    :returns: Nested ``TableDict``s with horizontal and/or vertical structures
-              applied, according to ``structure``.
+    :returns: Nested :class:`TableDict` s with horizontal and/or vertical
+              structures applied, according to ``structure``.
     :rtype: HorizontalTableDict or VerticalTableDict
     """
 
@@ -388,8 +388,8 @@ def build_optimal_table_dict(datadict):
     :arg datadict: Nested dicts or association lists.  Association lists have
                    the advantage of being ordered.
     :type datadict: dict or tuple or list
-    :returns: Nested ``TableDict``s with horizontal and/or vertical structures
-              applied, according to the less ugly structure possible.
+    :returns: Nested :class:`TableDict` with horizontal and/or vertical
+                  structures applied, according to ``structure``.
     :rtype: HorizontalTableDict or VerticalTableDict
     """
 
