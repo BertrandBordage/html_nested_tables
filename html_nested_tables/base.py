@@ -2,11 +2,12 @@
 
 from __future__ import unicode_literals, division
 from collections import OrderedDict
+from itertools import product
 
 
 __all__ = (
     'TableDict', 'HorizontalTableDict', 'VerticalTableDict', 'h', 'v',
-    'build_table_dict', 'build_optimal_table_dict',
+    'get_all_structures', 'build_table_dict', 'build_optimal_table_dict',
 )
 
 
@@ -339,6 +340,19 @@ h = HorizontalTableDict
 v = VerticalTableDict
 
 
+def get_all_structures(datadict):
+    """
+    Returns all the possible structures for a datadict.
+
+    :arg datadict: Nested dicts or association lists.  Association lists have
+                   the advantage of being ordered.
+    :returns: All possible structures.
+    :rtype: frozenset
+    """
+
+    return list(product((v, h), repeat=len(datadict)))
+
+
 def build_table_dict(datadict, structure):
     """
     Automatically builds a TableDict from ``datadict`` and ``structure``.
@@ -379,10 +393,7 @@ def build_optimal_table_dict(datadict):
     :rtype: HorizontalTableDict or VerticalTableDict
     """
 
-    structures = ((a, b, c)
-                  for a in (v, h)
-                  for b in (v, h)
-                  for c in (v, h))
+    structures = get_all_structures(datadict)
     tables = [build_table_dict(datadict, structure)
               for structure in structures]
     return sorted(tables, key=lambda t: t.get_ugliness())[0]
