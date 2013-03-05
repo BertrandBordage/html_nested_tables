@@ -16,4 +16,5 @@ setup(
     author_email='bordage.bertrand@gmail.com',
     description='Python module that generates nested HTML tables '
                 'from nested association lists.',
+    long_description=open('README.rst').read(),
 )
