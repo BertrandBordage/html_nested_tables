@@ -90,7 +90,7 @@ class TableDict(OrderedDict):
         1
         >>> TableDict._get_headers_depth([[1, [11, 12], [2, [21, 22]]]])
         2
-        >>> TableDict._get_headers_depth([[1, [[11, [111, 112]]]])
+        >>> TableDict._get_headers_depth([[1, [[11, [111, 112]]]]])
         3
         """
 
@@ -112,7 +112,7 @@ class TableDict(OrderedDict):
         :returns: The total length of the deepest lists inside ``l``.
         :rtype: int
 
-        >>> TableDict._get_final_length(['a', [1, 2, 3], 'b', [4, 5]])
+        >>> TableDict._get_final_length([['a', [1, 2, 3]], ['b', [4, 5]]])
         5
         """
 
