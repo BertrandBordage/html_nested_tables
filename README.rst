@@ -14,3 +14,5 @@ Renders like this:
 .. image:: https://raw.github.com/BertrandBordage/html_nested_tables/master/example.png
 
 You can run ``python example.py`` to test it.
+
+`Documentation available here <https://html_nested_tables.readthedocs.org/en/latest/>`_.
