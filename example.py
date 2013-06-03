@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 from html_nested_tables import build_table_dict, build_optimal_table_dict, \
-    v, h
+    get_all_structures
 
 
 d = (
@@ -12,8 +12,11 @@ d = (
             ('femmes', 30),
         )),
         ('quartier de détention', (
-            ('garçons', 8),
-            ('jeunes filles', 1),
+            ('garçons', (
+                ('moins de 13 ans', 1),
+                ('plus de 13 ans', 7),
+            )),
+            ('jeunes filles', 0),
         )),
     )),
     ('1902', (
@@ -23,7 +26,10 @@ d = (
         )),
         ('quartier correctionnel', (
             ('hommes', 12),
-            ('garçons', 3),
+            ('garçons', (
+                ('moins de 13 ans', 1),
+                ('plus de 13 ans', 2),
+            )),
         )),
     )),
     ('1903', (
@@ -34,18 +40,24 @@ d = (
         )),
         ('quartier correctionnel', (
             ('hommes', 5),
-            ('garçons', 4),
+            ('garçons', (
+                ('moins de 13 ans', 1),
+                ('plus de 13 ans', 3),
+            )),
         )),
         ('quartier de détention', (
             ('hommes', 6,),
-            ('garçons', 2),
+            ('garçons', (
+                ('moins de 13 ans', 0),
+                ('plus de 13 ans', 2),
+            )),
             ('jeunes filles', 1),
         )),
     )),
 )
 
 
-structures = ((a, b, c) for a in (v, h) for b in (v, h) for c in (v, h))
+structures = get_all_structures(d)
 tables = [build_table_dict(d, structure) for structure in structures]
 
 

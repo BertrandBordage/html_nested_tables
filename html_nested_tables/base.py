@@ -6,23 +6,38 @@ from itertools import product
 
 
 __all__ = (
+    'HORIZONTAL', 'VERTICAL',
     'TableDict', 'HorizontalTableDict', 'VerticalTableDict', 'h', 'v',
     'get_all_structures', 'build_table_dict', 'build_optimal_table_dict',
 )
+
+
+HORIZONTAL = 'horizontal'
+VERTICAL = 'vertical'
+
+
+def build_tag(name, props, content):
+    props_str = ' '.join('%s="%s"' % (k, v) for k, v in props.items())
+    return '<%s %s>%s</%s>' % (name, props_str, content, name)
 
 
 class TableDict(OrderedDict):
     """
     TableDict objects are ordered dicts with methods that renders HTML tables.
 
-    Here is an ugly schema to define the terms I’m using::
+    Here is an ugly schema to define the terms I’m using:
 
-                 hh1        hh2        hh3        hh4
-              hh11 hh12  hh21 hh22  hh31 hh32  hh41 hh42
-
-        vh1   dA   dB    dC   dE    dF   dG    dH   dI
-        vh2   dJ   dK    dL   dM    dN   dO    dP   dQ
-        vh3   dR   dS    dT   dU    dV   dW    dX   dY
+    +---------+-------------+-------------+-------------+-------------+
+    |         |     hh1     |     hh2     |     hh3     |     hh4     |
+    |         +------+------+------+------+------+------+------+------+
+    |         | hh11 | hh12 | hh21 | hh22 | hh31 | hh32 | hh41 | hh42 |
+    +=========+======+======+======+======+======+======+======+======+
+    | **vh1** |  dA  |  dB  |  dC  |  dE  |  dF  |  dG  |  dH  |  dI  |
+    +---------+------+------+------+------+------+------+------+------+
+    | **vh2** |  dJ  |  dK  |  dL  |  dM  |  dN  |  dO  |  dP  |  dQ  |
+    +---------+------+------+------+------+------+------+------+------+
+    | **vh3** |  dR  |  dS  |  dT  |  dU  |  dV  |  dW  |  dX  |  dY  |
+    +---------+------+------+------+------+------+------+------+------+
 
     `hh1`, `hh11`, `hh2` […] are horizontal headers,
     `vh1`, `vh2`, […] are vertical headers,
@@ -50,8 +65,8 @@ class TableDict(OrderedDict):
         :rtype: list
         """
 
-        DictClass = {'vertical': VerticalTableDict,
-                     'horizontal': HorizontalTableDict}[side]
+        DictClass = {HORIZONTAL: HorizontalTableDict,
+                     VERTICAL: VerticalTableDict}[side]
         headers = []
         for k, v in self.items():
             if isinstance(v, TableDict):
@@ -69,10 +84,10 @@ class TableDict(OrderedDict):
         return headers
 
     def horizontal_headers(self):
-        return self._get_headers('horizontal')
+        return self._get_headers(HORIZONTAL)
 
     def vertical_headers(self):
-        return self._get_headers('vertical')
+        return self._get_headers(VERTICAL)
 
     @staticmethod
     def _get_headers_depth(headers):
@@ -96,7 +111,7 @@ class TableDict(OrderedDict):
 
         # Taken from http://stackoverflow.com/a/6039138/1576438
         def max_depth(l):
-            return isinstance(l, list) and max(map(max_depth, l)) + 1
+            return isinstance(l, (list, tuple, dict)) and max(map(max_depth, l)) + 1
 
         if not headers:
             return 1
@@ -118,7 +133,7 @@ class TableDict(OrderedDict):
 
         total = 0
         for item in l:
-            if isinstance(item, list):
+            if isinstance(item, (list, tuple)):
                 header, group = item
                 total += cls._get_final_length(group)
             else:
@@ -134,17 +149,24 @@ class TableDict(OrderedDict):
 
         to_be_explored = []
         headers = headers or self.horizontal_headers()
+        max_depth = self._get_headers_depth(self.horizontal_headers())
         for item in headers:
+            group = None
             if isinstance(item, list):
                 header, group = item
-                yield header, depth, {'colspan': self._get_final_length(group)}
+                props = {'colspan': self._get_final_length(group)}
                 to_be_explored.extend(group)
             else:
-                yield item, depth, {}
+                header = item
+                props = {}
+            if not group and depth <= max_depth:
+                props['rowspan'] = max_depth - depth
+            yield header, depth, props, not group
         if to_be_explored:
-            for header, depth, props in self._horizontal_header_iterator(
+            for subheader, subdepth, subprops, is_leaf \
+                in self._horizontal_header_iterator(
                     to_be_explored, depth + 1):
-                yield header, depth, props
+                yield subheader, subdepth, subprops, is_leaf
 
     def _vertical_header_iterator(self, headers=None, depth=0):
         """
@@ -154,15 +176,22 @@ class TableDict(OrderedDict):
         """
 
         headers = headers or self.vertical_headers()
+        max_depth = self._get_headers_depth(self.vertical_headers())
         for item in headers:
+            group = None
             if isinstance(item, list):
                 header, group = item
-                yield header, depth, {'rowspan': self._get_final_length(group)}
-                for subheader, subdepth, subprops \
-                        in self._vertical_header_iterator(group, depth + 1):
-                    yield subheader, subdepth, subprops
+                props = {'rowspan': self._get_final_length(group)}
             else:
-                yield item, depth, {}
+                header = item
+                props = {}
+            if not group and depth <= max_depth:
+                props['colspan'] = max_depth - depth
+            yield header, depth, props, not group
+            if group:
+                for subheader, subdepth, subprops, is_leaf \
+                        in self._vertical_header_iterator(group, depth + 1):
+                    yield subheader, subdepth, subprops, is_leaf
 
     def _accessors_iterator(self, headers, parent_accessors=()):
         """
@@ -188,6 +217,18 @@ class TableDict(OrderedDict):
             else:
                 yield parent_accessors + (accessor,)
 
+    def _horizontal_accessors(self):
+        if not hasattr(self, '__horizontal_accessors'):
+            self.__horizontal_accessors = list(
+                self._accessors_iterator(self.horizontal_headers()))
+        return self.__horizontal_accessors
+
+    def _vertical_accessors(self):
+        if not hasattr(self, '__vertical_accessors'):
+            self.__vertical_accessors = list(
+                self._accessors_iterator(self.vertical_headers()))
+        return self.__vertical_accessors
+
     def _data_iterator(self):
         """
         Returns a generator that iterates over data.
@@ -200,31 +241,34 @@ class TableDict(OrderedDict):
             x, y = 0, 0
             for table_class in self.structure:
                 try:
-                    if table_class.direction == 'horizontal':
-                        v = v[horizontal_accessor[x]]
+                    if table_class.direction == HORIZONTAL:
+                        accessor = horizontal_accessor[x]
                         x += 1
                     else:
-                        v = v[vertical_accessor[y]]
+                        accessor = vertical_accessor[y]
                         y += 1
-                except KeyError:
-                    v = None
+                except IndexError:
                     break
+                try:
+                    v = v[accessor]
+                except (TypeError, KeyError):
+                    return
+
+            if isinstance(v, TableDict):
+                return
+
             return v
 
-        vertical_accessors = \
-            list(self._accessors_iterator(self.vertical_headers())) \
-            or (None,)
-        horizontal_accessors = \
-            list(self._accessors_iterator(self.horizontal_headers())) \
-            or (None,)
+        vertical_accessors = self._vertical_accessors() or (None,)
+        horizontal_accessors = self._horizontal_accessors() or (None,)
         for vertical_accessor in vertical_accessors:
             for horizontal_accessor in horizontal_accessors:
                 yield inner_generator(vertical_accessor, horizontal_accessor)
 
-    @staticmethod
-    def tag(name, props, content):
-        props_str = ' '.join('%s="%s"' % (k, v) for k, v in props.items())
-        return '<%s %s>%s</%s>' % (name, props_str, content, name)
+    def _get_data(self):
+        if not hasattr(self, '__data'):
+            self.__data = list(self._data_iterator())
+        return self.__data
 
     def generate_html(self):
         """
@@ -254,37 +298,35 @@ class TableDict(OrderedDict):
                        self._get_headers_depth(horizontal_headers))
             # Creates horizontal headers.
             previous_depth = 0
-            for header, depth, props \
+            for header, depth, props, is_leaf \
                     in self._horizontal_header_iterator(horizontal_headers):
                 if depth != previous_depth:
                     out += '</tr><tr>'
                     previous_depth = depth
-                out += self.tag('th', props, header)
+                out += build_tag('th', props, header)
 
         horizontal_length = self._get_final_length(horizontal_headers) or 1
-        max_vertical_depth = self._get_headers_depth(vertical_headers) or 1
 
         def display_data(data_index=0):
             out = ''
-            for data in list(self._data_iterator())[
+            for data in self._get_data()[
                     horizontal_length * data_index:
                     horizontal_length * (data_index + 1)]:
-                out += '<td>%s</td>' % (data or '-')
+                out += '<td>%s</td>' % ('-' if data is None else data)
             return out
 
         # Creates lines of vertical headers et data.
         if vertical_headers:
             previous_depth = 0
             data_index = -1
-            for header, depth, props \
+            for header, depth, props, is_leaf \
                     in self._vertical_header_iterator(vertical_headers):
                 if depth <= previous_depth:
                     out += '</tr><tr>'
                     data_index += 1
-                out += self.tag('th', props, header)
-                if depth == max_vertical_depth - 1:
-                    if data_index != -1:
-                        out += display_data(data_index)
+                out += build_tag('th', props, header)
+                if is_leaf:
+                    out += display_data(data_index)
                 previous_depth = depth
         else:
             out += '</tr><tr>' + display_data() + '</tr>'
@@ -327,13 +369,13 @@ class HorizontalTableDict(TableDict):
     """
 
     __metaclass__ = HorizontalTableDictMeta
-    direction = 'horizontal'
+    direction = HORIZONTAL
 
 
 class VerticalTableDict(TableDict):
     __doc__ = HorizontalTableDict.__doc__
     __metaclass__ = VerticalTableDictMeta
-    direction = 'vertical'
+    direction = VERTICAL
 
 
 h = HorizontalTableDict
@@ -350,7 +392,7 @@ def get_all_structures(datadict):
     :rtype: list
     """
 
-    return list(product((v, h), repeat=len(datadict)))
+    return list(product((v, h), repeat=TableDict._get_headers_depth(datadict)))
 
 
 def build_table_dict(datadict, structure):
