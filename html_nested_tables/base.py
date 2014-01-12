@@ -121,7 +121,7 @@ class TableDict(OrderedDict):
     @classmethod
     def _get_final_length(cls, l):
         """
-        Returns the total length of the deepest lists inside ``ŀ``.
+        Returns the total length of the deepest lists inside ``l``.
 
         :arg list l: A nested list.
         :returns: The total length of the deepest lists inside ``l``.
