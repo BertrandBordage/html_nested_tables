@@ -15,4 +15,4 @@ Renders like this:
 
 You can run ``python example.py`` to test it.
 
-`Documentation available here <https://html_nested_tables.readthedocs.org/en/latest/>`_.
+`Documentation available here <https://html-nested-tables.readthedocs.org/en/latest/>`_.
