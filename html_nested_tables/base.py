@@ -49,7 +49,7 @@ class TableDict(OrderedDict):
 
     def _get_headers(self, side):
         """
-        Builds an nested headers list based on the side of the headers.
+        Builds a nested headers list based on the side of the headers.
 
         This is a mix between lists and association lists, since we need to
         know which header(s) are nested inside which header(s).
@@ -293,7 +293,8 @@ class TableDict(OrderedDict):
             out += '<tr>'
             if vertical_headers:
                 # Creates the top left empty cell.
-                out += '<td colspan="%s" rowspan="%s" style="border: none;">' \
+                out += '<td colspan="%s" rowspan="%s" ' \
+                       'style="border: none;"></td>' \
                     % (self._get_headers_depth(vertical_headers),
                        self._get_headers_depth(horizontal_headers))
             # Creates horizontal headers.
@@ -315,7 +316,7 @@ class TableDict(OrderedDict):
                 out += '<td>%s</td>' % ('-' if data is None else data)
             return out
 
-        # Creates lines of vertical headers et data.
+        # Creates lines of vertical headers and data.
         if vertical_headers:
             previous_depth = 0
             data_index = -1
