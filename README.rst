@@ -2,6 +2,10 @@
 html_nested_tables
 ******************
 
+Statistics: |ohloh_stats|
+
+.. |ohloh_stats| image:: https://www.ohloh.net/p/html_nested_tables/widgets/project_thin_badge.gif
+
 
 Considering ``d`` as defined in `example.py`, this::
 
